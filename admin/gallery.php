@@ -1,0 +1,300 @@
+<?php
+// gallery.php
+$page_title = 'Gallery';
+session_start();
+require_once '../includes/database.php';
+require_once 'includes/header.php';
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
+// User role check (Editors can manage gallery)
+$user_role = $_SESSION['user_role'] ?? 'Editor';
+$current_user_id = $_SESSION['user_id'];
+
+$message = ''; // To store success or error messages
+
+// Define the upload directory
+$upload_dir = '../uploads/gallery/'; // Relative to this script
+
+// Ensure the upload directory exists and is writable
+if (!is_dir($upload_dir)) {
+    mkdir($upload_dir, 0777, true); // Create directory with full permissions (adjust for production)
+}
+if (!is_writable($upload_dir)) {
+    $message = '<div class="alert alert-danger">Upload directory is not writable. Please check permissions for ' . $upload_dir . '</div>';
+}
+
+// --- Handle Add Category Form Submission ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_category'])) {
+    $category_name = trim($_POST['category_name']);
+    $description = trim($_POST['category_description']);
+
+    if (empty($category_name)) {
+        $message = '<div class="alert alert-danger">Category Name is required.</div>';
+    } else {
+        $check_sql = "SELECT category_id FROM gallery_categories WHERE category_name = ?";
+        if ($stmt_check = $conn->prepare($check_sql)) {
+            $stmt_check->bind_param("s", $category_name);
+            $stmt_check->execute();
+            $stmt_check->store_result();
+            if ($stmt_check->num_rows > 0) {
+                $message = '<div class="alert alert-warning">Category "' . htmlspecialchars($category_name) . '" already exists.</div>';
+            } else {
+                $sql = "INSERT INTO gallery_categories (category_name, description) VALUES (?, ?)";
+                if ($stmt = $conn->prepare($sql)) {
+                    $stmt->bind_param("ss", $category_name, $description);
+                    if ($stmt->execute()) {
+                        $message = '<div class="alert alert-success">Category added successfully!</div>';
+                    } else {
+                        $message = '<div class="alert alert-danger">Error adding category: ' . $stmt->error . '</div>';
+                    }
+                    $stmt->close();
+                } else {
+                    $message = '<div class="alert alert-danger">Database error preparing category insert statement: ' . $conn->error . '</div>';
+                }
+            }
+            $stmt_check->close();
+        } else {
+            $message = '<div class="alert alert-danger">Database error preparing category check statement: ' . $conn->error . '</div>';
+        }
+    }
+}
+
+// --- Handle Image Upload Form Submission ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['upload_image'])) {
+    $image_alt_text = trim($_POST['image_alt_text']);
+    $image_title_tag = trim($_POST['image_title_tag']);
+    $image_description = trim($_POST['image_description']);
+    $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+    $is_published = isset($_POST['is_published']) ? 1 : 0;
+
+    if (empty($_FILES['image_file']['name'])) {
+        $message = '<div class="alert alert-danger">Please select an image file to upload.</div>';
+    } else {
+        $file_name = basename($_FILES['image_file']['name']);
+        $file_type = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        $unique_filename = uniqid('img_', true) . '.' . $file_type; // Generate unique name
+        $target_file = $upload_dir . $unique_filename;
+        $uploadOk = 1;
+
+        // Check if image file is a actual image or fake image
+        $check = getimagesize($_FILES['image_file']['tmp_name']);
+        if ($check !== false) {
+            // Allow certain file formats
+            if($file_type != "jpg" && $file_type != "png" && $file_type != "jpeg" && $file_type != "gif" ) {
+                $message = '<div class="alert alert-danger">Sorry, only JPG, JPEG, PNG & GIF files are allowed.</div>';
+                $uploadOk = 0;
+            }
+            // Check file size (e.g., 5MB limit)
+            if ($_FILES['image_file']['size'] > 5000000) { // 5MB in bytes
+                $message = '<div class="alert alert-danger">Sorry, your file is too large (max 5MB).</div>';
+                $uploadOk = 0;
+            }
+        } else {
+            $message = '<div class="alert alert-danger">File is not an image.</div>';
+            $uploadOk = 0;
+        }
+
+        // Check if $uploadOk is set to 0 by an error
+        if ($uploadOk == 0) {
+            // Error message already set
+        } else {
+            // if everything is ok, try to upload file
+            if (move_uploaded_file($_FILES['image_file']['tmp_name'], $target_file)) {
+                // Insert image info into database
+                $sql = "INSERT INTO gallery_images (category_id, image_filename, image_alt_text, title_tag, description, uploaded_by_user_id, is_published) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                if ($stmt = $conn->prepare($sql)) {
+                    $stmt->bind_param("isssisi", $category_id, $unique_filename, $image_alt_text, $image_title_tag, $image_description, $current_user_id, $is_published);
+                    if ($stmt->execute()) {
+                        $message = '<div class="alert alert-success">The file ' . htmlspecialchars($unique_filename) . ' has been uploaded and details saved.</div>';
+                    } else {
+                        $message = '<div class="alert alert-danger">Error saving image details to database: ' . $stmt->error . '</div>';
+                        unlink($target_file); // Delete uploaded file if DB insert fails
+                    }
+                    $stmt->close();
+                } else {
+                    $message = '<div class="alert alert-danger">Database error preparing image insert statement: ' . $conn->error . '</div>';
+                    unlink($target_file); // Delete uploaded file if statement preparation fails
+                }
+            } else {
+                $message = '<div class="alert alert-danger">Sorry, there was an error uploading your file.</div>';
+            }
+        }
+    }
+}
+
+
+// --- Fetch Gallery Categories for Display and Dropdown ---
+$categories = [];
+$sql_categories = "SELECT category_id, category_name FROM gallery_categories ORDER BY category_name ASC";
+$result_categories = $conn->query($sql_categories);
+if ($result_categories) {
+    while ($row = $result_categories->fetch_assoc()) {
+        $categories[] = $row;
+    }
+} else {
+    $message = '<div class="alert alert-danger">Error fetching categories: ' . $conn->error . '</div>';
+}
+
+// --- Fetch Gallery Images for Display ---
+$images = [];
+$sql_images = "SELECT gi.image_id, gi.image_filename, gi.image_alt_text, gi.title_tag, gi.description, gc.category_name, u.username, gi.uploaded_at, gi.is_published FROM gallery_images gi LEFT JOIN gallery_categories gc ON gi.category_id = gc.category_id LEFT JOIN users u ON gi.uploaded_by_user_id = u.user_id ORDER BY gi.uploaded_at DESC";
+$result_images = $conn->query($sql_images);
+if ($result_images) {
+    while ($row = $result_images->fetch_assoc()) {
+        $images[] = $row;
+    }
+} else {
+    $message = '<div class="alert alert-danger">Error fetching images: ' . $conn->error . '</div>';
+}
+
+// Close database connection
+$conn->close();
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UpdateIQ - <?php echo $page_title; ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <style>
+        .image-thumbnail {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .gallery-image-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .gallery-image-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .gallery-image-card h5 {
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+        .gallery-image-card p {
+            font-size: 0.85rem;
+            margin-bottom: 3px;
+        }
+    </style>
+</head>
+<body>
+   
+
+    <div class="container mt-4">
+
+        <?php echo $message; // Display success/error messages ?>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Add New Category</h3>
+            </div>
+            <div class="card-body">
+                <form action="gallery.php" method="POST">
+                    <div class="mb-3">
+                        <label for="category_name" class="form-label">Category Name</label>
+                        <input type="text" class="form-control" id="category_name" name="category_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category_description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="category_description" name="category_description" rows="2"></textarea>
+                    </div>
+                    <button type="submit" name="add_category" class="btn btn-primary">Add Category</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Upload New Image</h3>
+            </div>
+            <div class="card-body">
+                <form action="gallery.php" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="image_file" class="form-label">Image File</label>
+                        <input type="file" class="form-control" id="image_file" name="image_file" accept="image/*" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id">
+                            <option value="">-- No Category --</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?php echo htmlspecialchars($cat['category_id']); ?>">
+                                    <?php echo htmlspecialchars($cat['category_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image_alt_text" class="form-label">Alt Text (for SEO & Accessibility)</label>
+                        <input type="text" class="form-control" id="image_alt_text" name="image_alt_text">
+                        <small class="form-text text-muted">Briefly describe the image content.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image_title_tag" class="form-label">Title Tag (Tooltip on hover)</label>
+                        <input type="text" class="form-control" id="image_title_tag" name="image_title_tag">
+                        <small class="form-text text-muted">Short, descriptive title for the image.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="image_description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="image_description" name="image_description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_published" name="is_published" checked>
+                        <label class="form-check-label" for="is_published">Is Published?</label>
+                    </div>
+                    <button type="submit" name="upload_image" class="btn btn-primary">Upload Image</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Existing Images</h3>
+            </div>
+            <div class="card-body">
+                <?php if (empty($images)): ?>
+                    <p>No images found in the gallery.</p>
+                <?php else: ?>
+                    <div class="row">
+                        <?php foreach ($images as $image): ?>
+                            <div class="col-md-3 col-sm-6 mb-4">
+                                <div class="gallery-image-card text-center">
+                                    <img src="../uploads/gallery/<?php echo htmlspecialchars($image['image_filename']); ?>" alt="<?php echo htmlspecialchars($image['image_alt_text'] ?? 'Image'); ?>" class="img-fluid">
+                                    <p class="text-muted small">ID: <?php echo htmlspecialchars($image['image_id']); ?></p>
+                                    <h5><?php echo htmlspecialchars($image['image_alt_text'] ?: 'No Alt Text'); ?></h5>
+                                    <p class="text-muted small">Category: <?php echo htmlspecialchars($image['category_name'] ?: 'Uncategorized'); ?></p>
+                                    <p class="text-muted small">Uploaded by: <?php echo htmlspecialchars($image['username'] ?: 'N/A'); ?></p>
+                                    <p class="text-muted small">Status:
+                                        <?php echo $image['is_published'] ? '<span class="badge bg-success">Published</span>' : '<span class="badge bg-secondary">Draft</span>'; ?>
+                                    </p>
+                                    <a href="edit_gallery_image.php?id=<?php echo htmlspecialchars($image['image_id']); ?>" class="btn btn-sm btn-info me-1">Edit</a>
+                                    <a href="delete_gallery_image.php?id=<?php echo htmlspecialchars($image['image_id']); ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this image? This will also remove the file from the server.');">Delete</a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

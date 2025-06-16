@@ -1,0 +1,55 @@
+/* Custom Styles for CMS */
+
+/* Body adjustments */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #e9ecef; /* Light gray background */
+}
+
+/* Navbar improvements */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+.navbar-nav .nav-link {
+    font-size: 1.05rem;
+    margin-right: 15px;
+}
+.navbar-dark .navbar-nav .nav-link.active {
+    color: #ffffff; /* Brighter white for active link */
+    font-weight: bold;
+}
+
+/* Container padding */
+.container {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+/* Card styles on dashboard */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.card-title {
+    color: #007bff; /* Primary blue for titles */
+    font-weight: 600;
+}
+.card-body {
+    padding: 25px;
+}
+
+/* General form styling */
+.form-label {
+    font-weight: 500;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 5px;
+}
