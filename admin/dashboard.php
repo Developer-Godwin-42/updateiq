@@ -255,16 +255,12 @@ try {
             <div class="d-flex flex-column flex-md-row align-items-center justify-content-between">
                 <div class="mb-3 mb-md-0">
                     <h2 class="mb-1">Welcome back, <?php echo htmlspecialchars($user_name); ?>! </h2>
-                    <p class="mb-0 opacity-75">Here's what's happening with your website today.</p>
+                    <p class="mb-0 opacity-75 text-dark">Here's what's happening with your website today.</p>
                 </div>
                 <div class="d-flex">
-                    <a href="blog.php" class="btn btn-light me-2">
+                    <a href="blog.php" id="newPost" class="btn btn-light me-2 border">
                         <i class="fas fa-plus me-2"></i>
                         New Post
-                    </a>
-                    <a href="#" class="btn btn-outline-light">
-                        <i class="fas fa-cog me-2"></i>
-                        Settings
                     </a>
                 </div>
             </div>
@@ -315,7 +311,7 @@ try {
                 <div class="progress-bar bg-secondary" style="width: <?php echo $draft_pct; ?>%" title="Draft"></div>
             </div>
             <div class="mt-2">
-                <a href="blog.php" class="btn btn-sm btn-outline-primary w-100">Manage Posts</a>
+                <a href="blog.php" class="btn btn-sm btn-outline-primary w-100">Manage Posts <i class="fas fa-arrow-right ms-2"></i></a>
             </div>
         </div>
     </div>
@@ -333,7 +329,7 @@ try {
                 <div class="progress-bar bg-success" style="width: 75%" title="Active"></div>
             </div>
             <div class="mt-2">
-                <a href="blog.php" class="btn btn-sm btn-outline-success w-100">Manage Categories</a>
+                <a href="blog.php" class="btn btn-sm btn-outline-success w-100">Manage Categories <i class="fas fa-arrow-right ms-2"></i></a>
             </div>
         </div>
     </div>
@@ -355,7 +351,7 @@ try {
                 </div>
             </div>
             <div class="mt-2">
-                <a href="users.php" class="btn btn-sm btn-outline-info w-100">Manage Users</a>
+                <a href="users.php" class="btn btn-sm btn-outline-info w-100">Manage Users <i class="fas fa-arrow-right ms-2"></i></a>
             </div>
         </div>
     </div>
@@ -373,49 +369,11 @@ try {
                 <div class="progress-bar bg-warning" style="width: 60%" title="Storage"></div>
             </div>
             <div class="mt-2">
-                <a href="gallery.php" class="btn btn-sm btn-outline-warning w-100">Manage Media</a>
+                <a href="gallery.php" class="btn btn-sm btn-outline-warning w-100">Manage Media <i class="fas fa-arrow-right ms-2"></i></a>
             </div>
         </div>
     </div>
 
-    <!-- <div class="col-6 col-md-4 col-lg-4">
-        <div class="stats-card h-100">
-            <div class="d-flex align-items-center mb-2">
-                <div class="icon-wrapper bg-purple bg-opacity-10 text-purple rounded-3 p-2 me-2">
-                    <i class="fas fa-comments"></i>
-                </div>
-                <span class="text-muted small">Comments</span>
-            </div>
-            <h3 class="mb-0"><?php echo number_format($stats['comments']); ?></h3>
-            <div class="progress mt-2" style="height: 4px;">
-                <div class="progress-bar bg-purple" style="width: 85%" title="Engagement"></div>
-            </div>
-            <div class="mt-2">
-                <a href="#" class="btn btn-sm btn-outline-purple w-100">Manage Comments</a>
-            </div>
-        </div>
-    </div> -->
-
-    <!-- <div class="col-6 col-md-4 col-lg-4">
-        <div class="stats-card h-100">
-            <div class="d-flex align-items-center mb-2">
-                <div class="icon-wrapper bg-dark bg-opacity-10 text-dark rounded-3 p-2 me-2">
-                    <i class="fas fa-server"></i>
-                </div>
-                <span class="text-muted small">System Status</span>
-            </div>
-            <div class="d-flex align-items-center">
-                <div class="system-status-indicator bg-success rounded-circle me-2" style="width: 8px; height: 8px;"></div>
-                <span class="ms-2 small">All systems operational</span>
-            </div>
-            <div class="mt-2">
-                <a href="#" class="btn btn-sm btn-outline-dark w-100" data-bs-toggle="modal" data-bs-target="#systemInfoModal">
-                    <i class="fas fa-info-circle me-2"></i>
-                    System Info
-                </a>
-            </div>
-        </div>
-    </div> -->
 </div>
 
 <div class="row g-4">

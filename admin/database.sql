@@ -119,6 +119,7 @@ CREATE TABLE IF NOT EXISTS `blog_posts` (
   `post_id` INT(11) NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(255) NOT NULL,
   `slug` VARCHAR(255) NOT NULL UNIQUE, -- SEO friendly URL part for the post
+  `featured_image_url` VARCHAR(255),
   `content` LONGTEXT, -- Use LONGTEXT for potentially large blog content
   `excerpt` TEXT, -- Short summary for listings
   `category_id` INT(11) DEFAULT NULL, -- Foreign key to blog_categories

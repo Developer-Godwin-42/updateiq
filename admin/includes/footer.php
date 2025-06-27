@@ -12,6 +12,12 @@
     
     <!-- Admin JS -->
     <script src="assets/js/admin.js"></script>
+
+
+    
+    
+    </body>
+</html>
     
     <!-- Page-specific JS -->
     <?php if (isset($page_js)): ?>
@@ -57,5 +63,6 @@
             $('.preloader').fadeOut('slow');
         });
     </script>
+    <script src="assets/js/driver.js"></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 <?php
 // edit_blog_post.php
+$page_title = 'Edit Blog Post';
 session_start();
 require_once '../includes/database.php';
 require_once 'includes/header.php';
@@ -134,59 +135,60 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMS - Edit Blog Post</title>
+    <title>UpdateIQ - <?php echo isset($page_title) ? ' - ' . htmlspecialchars($page_title) : ''; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/admin.css">
     <script src="https://cdn.tiny.cloud/1/r8pyi1q5m5kxvmsr9sk2rl5g7edwsekb9kkqvakytdlrbzwx/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-    <script>
-        tinymce.init({
-            selector: '#post_content', // Targets the textarea for content
-            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
-            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bulllist indent outdent | emoticons charmap | removeformat',
-            height: 400, // Adjust height of the editor
-        });
-    </script>
+<script>
+    tinymce.init({
+        selector: '#post_content',
+        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bulllist indent outdent | emoticons charmap | removeformat',
+        height: 400,
+
+        images_upload_url: 'includes/upload_tinymce_image.php',
+        automatic_uploads: true,
+        file_picker_types: 'image',
+        
+        // MODIFIED: file_picker_callback to set title (which becomes alt/title by TinyMCE's default behavior)
+        file_picker_callback: function (cb, value, meta) {
+            var input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+
+            input.onchange = function () {
+                var file = this.files[0]; // Get the selected file
+                var reader = new FileReader();
+                reader.onload = function () {
+                    var id = 'blobid' + (new Date()).getTime();
+                    var blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                    var base64 = reader.result.split(',')[1];
+                    var blobInfo = blobCache.create(id, file, base64);
+                    blobCache.add(blobInfo);
+                    
+                    // --- THIS IS THE CRUCIAL LINE ---
+                    // 'file.name' gives you the original filename (e.g., "my_image.jpg")
+                    // TinyMCE's 'title' property in the callback often populates both
+                    // the title attribute and the alt text field in the dialog.
+                    cb(blobInfo.blobUri(), { title: file.name }); 
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        },
+        
+        // These settings ensure the fields are visible in the TinyMCE image dialog
+        image_title: true,     // Enables the 'Title' field
+        image_alt_field: true  // Enables the 'Alternative description' (Alt text) field
+    
+    });
+</script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.php">CMS Admin</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <!-- <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.php">Dashboard</a>
-                    </li>
-                    <?php if ($user_role == 'Admin'): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="users.php">User Management</a>
-                    </li>
-                    <?php endif; ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="menus.php">Menu Management</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="gallery.php">Gallery Management</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="blog.php">Blog Management</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="logout.php">Logout</a>
-                    </li>
-                </ul>
-            </div> -->
-        </div>
-    </nav>
+
 
     <div class="container mt-4">
-        <h1>Edit Blog Post</h1>
-        <hr>
 
         <?php echo $message; ?>
 

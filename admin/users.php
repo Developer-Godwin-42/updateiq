@@ -101,14 +101,14 @@ $conn->close();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/admin.css">
+    <!-- <link rel="stylesheet" href="../assets/css/global.css"> -->
 
 </head>
 <body>
     
 
     <div class="container mt-4">
-       
-
+    
         <?php echo $message; // Display success/error messages ?>
 
         <div class="card mb-4">

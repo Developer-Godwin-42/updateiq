@@ -94,7 +94,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 700;
     line-height: 1.3;
     color: var(--dark-color);
-    margin-bottom: 1rem;
+    /* margin-bottom: 1rem; */
 }
 
 h1 { font-size: 3rem; }
@@ -612,4 +612,143 @@ a:hover {
     .print-only {
         display: block !important;
     }
+}
+
+.blog-banner {
+  background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+  padding: 80px 0;
+  margin-bottom: 60px;
+}
+
+.blog-banner h1 {
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.blog-banner .breadcrumb {
+  justify-content: center;
+  background: transparent;
+  padding: 0.75rem 0;
+}
+
+.blog-banner .breadcrumb-item+.breadcrumb-item::before {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.blog-banner .breadcrumb-item a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.blog-banner .breadcrumb-item a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+
+  /* Sidebar Styles */
+  .sidebar {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 20px;
+    transition: all 0.3s ease;
+    z-index: 10;
+    margin-bottom: 30px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.blog-sidebar {
+    position: sticky;
+    top: 120px;
+    transition: all 0.3s ease;
+    z-index: 10;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+.categories-list {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0 0 0;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) rgba(0, 0, 0, 0.1);
+    padding-right: 5px;
+}
+
+.categories-list li {
+    margin-bottom: 12px;
+}
+
+.categories-list a:hover,
+.categories-list a.active {
+    background: var(--primary-color, #007bff); /* Use a fallback color if var is not defined */
+    color: white;
+    transform: translateX(5px);
+}
+
+.categories-list a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    color: #666;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: rgba(79, 193, 164, 0.03); /* This green might conflict with blue hover */
+}
+
+.category-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.categories-list a:hover i,
+.categories-list a.active i {
+    color: white;
+}
+
+.categories-list a:hover .post-count,
+.categories-list a.active .post-count {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.post-count {
+    background: rgba(79, 193, 164, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    color: var(--primary-color, #007bff); /* Use a fallback color */
+    font-weight: 600;
+    transition: all 0.3s ease;
 }

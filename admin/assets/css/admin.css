@@ -2,39 +2,42 @@
 
 /* Sidebar */
 .sidebar {
-    position: fixed;
+    position: fixed ;
     top: 0;
     left: 0;
     bottom: 0;
     z-index: 100;
-    padding: 2rem 0;
-    width: 250px;
-    background: var(--gradient-primary);
-    color: white;
-    transition: var(--transition);
-    box-shadow: var(--shadow-md);
+    padding: 2rem 0 ;
+    width: 250px ;
+    background: var(--gradient-primary) ;
+    color: white ;
+    transition: var(--transition) ;
+    box-shadow: var(--shadow-md) ;
+    margin: 0 !important;
+    border-radius: 0;
+    max-height: 100vh !important;
 }
 
 .sidebar-brand {
-    padding: 0 1.5rem 2rem;
-    text-align: center;
+    padding: 0 1.5rem 2rem ;
+    text-align: center ;
 }
 
 .sidebar-nav {
-    padding: 0 1rem;
+    padding: 0 1rem ;
 }
 
 .nav-item {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.5rem ;
 }
 
 .nav-link {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    color: rgba(255, 255, 255, 0.7);
-    border-radius: var(--radius-md);
-    transition: var(--transition);
+    display: flex ;
+    align-items: center ;
+    padding: 0.75rem 1rem ;
+    color: rgba(255, 255, 255, 0.7) ;
+    border-radius: var(--radius-md) ;
+    transition: var(--transition) ;
 }
 
 .nav-link:hover,
@@ -237,4 +240,12 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--primary-dark);
+}
+
+.stats-card .btn:hover{
+    background: none;
+    color: black;
+    border: 1px solid var(--gradient-primary);
+    border-radius: var(--radius-md);
+    transition: var(--transition);
 }

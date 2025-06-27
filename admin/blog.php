@@ -1,10 +1,10 @@
-
-
 <?php
 // blog.php
+$page_title = 'Blog Management';
 session_start();
 require_once '../includes/database.php';
-require_once 'includes/header.php';
+require_once 'includes/header.php'; // Assuming this header includes basic session and authentication
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -17,8 +17,21 @@ $current_user_id = $_SESSION['user_id'];
 
 $message = ''; // To store success or error messages
 
-// --- Handle Add Category Form Submission ---
+// Define the upload directory for blog featured images
+$blog_upload_dir = '../uploads/blog/'; // Create this folder later if it doesn't exist
+
+// Ensure the upload directory exists and is writable
+if (!is_dir($blog_upload_dir)) {
+    mkdir($blog_upload_dir, 0777, true); // Create directory with full permissions (adjust for production)
+}
+if (!is_writable($blog_upload_dir)) {
+    $message = '<div class="alert alert-danger">Blog image upload directory is not writable. Please check permissions for ' . $blog_upload_dir . '</div>';
+}
+
+
+// --- Handle Add Category Form Submission (Existing code, no changes needed here) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_blog_category'])) {
+    // ... (Your existing code for adding categories) ...
     $category_name = trim($_POST['category_name']);
     $slug = trim($_POST['slug']); // For SEO-friendly URLs
     $description = trim($_POST['category_description']);
@@ -26,7 +39,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_blog_category'])) 
     if (empty($category_name) || empty($slug)) {
         $message = '<div class="alert alert-danger">Category Name and Slug are required.</div>';
     } else {
-        // Check for duplicate category name or slug
         $check_sql = "SELECT category_id FROM blog_categories WHERE category_name = ? OR slug = ?";
         if ($stmt_check = $conn->prepare($check_sql)) {
             $stmt_check->bind_param("ss", $category_name, $slug);
@@ -55,20 +67,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_blog_category'])) 
     }
 }
 
-// --- Handle Add Blog Post Form Submission ---
+
+// --- Handle Add Blog Post Form Submission (MODIFIED for featured image) ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_blog_post'])) {
     $title = trim($_POST['title']);
     $slug = trim($_POST['slug']);
-    $content = $_POST['content']; // HTML content from TinyMCE
+    $content = $_POST['content'];
     $excerpt = trim($_POST['excerpt']);
     $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
     $meta_title = trim($_POST['meta_title']);
     $meta_description = trim($_POST['meta_description']);
     $meta_keywords = trim($_POST['meta_keywords']);
-    $status = $_POST['status']; // 'draft' or 'published'
-    $published_at = ($status == 'published') ? date('Y-m-d H:i:s') : null; // Set publish date if published
+    $status = $_POST['status'];
+    $published_at = ($status == 'published') ? date('Y-m-d H:i:s') : null;
 
-    // Basic validation
+    $featured_image_filename = null; // Initialize to null
+
+    // Handle featured image upload
+    if (isset($_FILES['featured_image_file']) && $_FILES['featured_image_file']['error'] == UPLOAD_ERR_OK) {
+        $file_name = basename($_FILES['featured_image_file']['name']);
+        $file_type = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+        $unique_filename = uniqid('blog_img_', true) . '.' . $file_type;
+        $target_file = $blog_upload_dir . $unique_filename;
+        $uploadOk = 1;
+
+        // Basic file validation (similar to gallery)
+        $check = getimagesize($_FILES['featured_image_file']['tmp_name']);
+        if ($check === false) { $message = '<div class="alert alert-danger">Featured file is not an image.</div>'; $uploadOk = 0; }
+        if (!in_array($file_type, ['webp'])) { $message = '<div class="alert alert-danger">Sorry, only WEBP files are allowed for featured image.</div>'; $uploadOk = 0; }
+        if ($_FILES['featured_image_file']['size'] > 1024) { $message = '<div class="alert alert-danger">Sorry, your featured image file is too large (max 1MB).</div>'; $uploadOk = 0; }
+
+        if ($uploadOk == 1) {
+            if (move_uploaded_file($_FILES['featured_image_file']['tmp_name'], $target_file)) {
+                $featured_image_filename = $unique_filename; // Set filename if upload successful
+            } else {
+                $message = '<div class="alert alert-danger">Sorry, there was an error uploading your featured image.</div>';
+                // Don't halt, but the filename will remain null
+            }
+        }
+    }
+
+
+    // Basic validation for post content
     if (empty($title) || empty($slug) || empty($content)) {
         $message = '<div class="alert alert-danger">Title, Slug, and Content are required for a blog post.</div>';
     } else {
@@ -81,13 +121,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_blog_post'])) {
             if ($stmt_check->num_rows > 0) {
                 $message = '<div class="alert alert-warning">Blog post with this slug already exists. Please choose a different one.</div>';
             } else {
-                $sql = "INSERT INTO blog_posts (title, slug, content, excerpt, category_id, author_user_id, meta_title, meta_description, meta_keywords, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                // Modified SQL to include featured_image_url
+                $sql = "INSERT INTO blog_posts (title, slug, content, excerpt, category_id, author_user_id, featured_image_url, meta_title, meta_description, meta_keywords, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 if ($stmt = $conn->prepare($sql)) {
-                    $stmt->bind_param("ssssiisssss", $title, $slug, $content, $excerpt, $category_id, $current_user_id, $meta_title, $meta_description, $meta_keywords, $status, $published_at);
+                    // Added 's' for featured_image_url parameter
+                    $stmt->bind_param("sssssissssss", $title, $slug, $content, $excerpt, $category_id, $current_user_id, $featured_image_filename, $meta_title, $meta_description, $meta_keywords, $status, $published_at);
                     if ($stmt->execute()) {
                         $message = '<div class="alert alert-success">Blog post "' . htmlspecialchars($title) . '" saved successfully as ' . htmlspecialchars($status) . '!</div>';
                     } else {
                         $message = '<div class="alert alert-danger">Error saving blog post: ' . $stmt->error . '</div>';
+                        // If DB insert fails, delete the uploaded file
+                        if ($featured_image_filename && file_exists($blog_upload_dir . $featured_image_filename)) {
+                            unlink($blog_upload_dir . $featured_image_filename);
+                        }
                     }
                     $stmt->close();
                 } else {
@@ -101,7 +147,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_blog_post'])) {
     }
 }
 
-// --- Fetch Blog Categories for Display and Dropdown ---
+
+// --- Fetch Blog Categories for Display and Dropdown (Existing code) ---
 $blog_categories = [];
 $sql_blog_categories = "SELECT category_id, category_name FROM blog_categories ORDER BY category_name ASC";
 $result_blog_categories = $conn->query($sql_blog_categories);
@@ -113,9 +160,9 @@ if ($result_blog_categories) {
     $message .= '<div class="alert alert-danger">Error fetching blog categories: ' . $conn->error . '</div>';
 }
 
-// --- Fetch Blog Posts for Display ---
+// --- Fetch Blog Posts for Display (Existing code, but also fetches featured_image_url now) ---
 $blog_posts = [];
-$sql_blog_posts = "SELECT bp.post_id, bp.title, bp.slug, bc.category_name, u.username, bp.status, bp.published_at, bp.created_at FROM blog_posts bp LEFT JOIN blog_categories bc ON bp.category_id = bc.category_id LEFT JOIN users u ON bp.author_user_id = u.user_id ORDER BY bp.created_at DESC";
+$sql_blog_posts = "SELECT bp.post_id, bp.title, bp.slug, bc.category_name, u.username, bp.status, bp.published_at, bp.created_at, bp.featured_image_url FROM blog_posts bp LEFT JOIN blog_categories bc ON bp.category_id = bc.category_id LEFT JOIN users u ON bp.author_user_id = u.user_id ORDER BY bp.created_at DESC";
 $result_blog_posts = $conn->query($sql_blog_posts);
 if ($result_blog_posts) {
     while ($row = $result_blog_posts->fetch_assoc()) {
@@ -133,63 +180,95 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UpdateIQ - Blog Management</title>
+    <title>UpdateIQ - <?php echo $page_title; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tiny.cloud/1/r8pyi1q5m5kxvmsr9sk2rl5g7edwsekb9kkqvakytdlrbzwx/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-    <script>
+    <!-- <script>
         tinymce.init({
-            selector: '#post_content', // Targets the textarea for content
+            selector: '#post_content',
             plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
             toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bulllist indent outdent | emoticons charmap | removeformat',
-            height: 400, // Adjust height of the editor
-            // Optional: for image upload in TinyMCE (requires backend implementation)
-            // images_upload_url: 'your_image_upload_handler.php',
-            // images_upload_handler: function (blobInfo, progress) { /* ... */ }
+            height: 400,
+            // Configure TinyMCE to handle image uploads via a custom handler (optional, more advanced)
+            // images_upload_url: 'your_image_upload_handler.php', // This would be a separate script
+            // automatic_uploads: true,
+            // file_picker_types: 'image',
+            // file_picker_callback: function (cb, value, meta) {
+            //     var input = document.createElement('input');
+            //     input.setAttribute('type', 'file');
+            //     input.setAttribute('accept', 'image/*');
+            //     input.onchange = function () {
+            //         var file = this.files[0];
+            //         var reader = new FileReader();
+            //         reader.onload = function () {
+            //             var id = 'blobid' + (new Date()).getTime();
+            //             var blobCache = tinymce.activeEditor.editorUpload.blobCache;
+            //             var base64 = reader.result.split(',')[1];
+            //             var blobInfo = blobCache.create(id, file, base64);
+            //             blobCache.add(blobInfo);
+            //             cb(blobInfo.blobUri(), { title: file.name });
+            //         };
+            //         reader.readAsDataURL(file);
+            //     };
+            //     input.click();
+            // }
         });
-    </script>
+    </script> -->
+    <!-- <script src="https://cdn.tiny.cloud/1/YOUR_API_KEY/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>  -->
+    <script>
+    tinymce.init({
+        selector: '#post_content',
+        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bulllist indent outdent | emoticons charmap | removeformat',
+        height: 400,
+
+        // --- NEW TINYMCE CONFIG FOR IMAGE UPLOADS ---
+        images_upload_url: 'includes/upload_tinymce_image.php', // This is the URL to your upload handler
+        automatic_uploads: true, // Automatically upload image when selected
+        file_picker_types: 'image', // Show image picker in dialog
+        
+        // This callback is for the file picker button (the folder icon in the dialog)
+        file_picker_callback: function (cb, value, meta) {
+            var input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+
+            input.onchange = function () {
+                var file = this.files[0];
+                var reader = new FileReader();
+                reader.onload = function () {
+                    var id = 'blobid' + (new Date()).getTime();
+                    var blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                    var base64 = reader.result.split(',')[1];
+                    var blobInfo = blobCache.create(id, file, base64);
+                    blobCache.add(blobInfo);
+                    cb(blobInfo.blobUri(), { title: file.name });
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        },
+
+        // --- Configuration for Lazy Loading and Title Tag in Editor ---
+        // This part mostly tells TinyMCE what HTML attributes to allow/expect.
+        // Lazy loading is primarily handled on the frontend rendering.
+        extended_valid_elements: 'img[class|src|alt|title|width|height|loading]', // Allow 'loading' attribute
+        custom_elements: 'img', // Treat img tags correctly
+        // This is where TinyMCE can be instructed to *add* attributes to inserted images
+        // This often requires more advanced customization or a plugin, but the `loading` attribute
+        // can be added manually by the user or through a custom TinyMCE button/hook.
+        // For now, by allowing 'loading' in extended_valid_elements, TinyMCE won't strip it if you add it.
+        // You'd typically add a function on the frontend to automatically add loading="lazy" if not present.
+    });
+</script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="dashboard.php">UpdateIQ Admin</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <!-- <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="dashboard.php">Dashboard</a>
-                    </li>
-                    <?php if ($user_role == 'Admin'): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="users.php">User Management</a>
-                    </li>
-                    <?php endif; ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="menus.php">Menu Management</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="gallery.php">Gallery Management</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="blog.php">Blog Management</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="logout.php">Logout</a>
-                    </li>
-                </ul>
-            </div> -->
-        </div>
-    </nav>
+    <?php require_once 'includes/header.php'; // Include the header with sidebar/nav ?>
 
     <div class="container mt-4">
-        <h1>Blog Management</h1>
-        <hr>
-
         <?php echo $message; // Display success/error messages ?>
 
         <div class="card mb-4">
@@ -221,8 +300,7 @@ $conn->close();
                 <h3>Create New Blog Post</h3>
             </div>
             <div class="card-body">
-                <form action="blog.php" method="POST">
-                    <div class="mb-3">
+                <form action="blog.php" method="POST" enctype="multipart/form-data"> <div class="mb-3">
                         <label for="title" class="form-label">Post Title</label>
                         <input type="text" class="form-control" id="title" name="title" required>
                     </div>
@@ -231,6 +309,13 @@ $conn->close();
                         <input type="text" class="form-control" id="slug" name="slug" placeholder="e.g., my-first-blog-post" required>
                         <small class="form-text text-muted">A URL-friendly version of the title (lowercase, no spaces, use hyphens).</small>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="featured_image_file" class="form-label">Featured Image (Banner)</label>
+                        <input type="file" class="form-control" id="featured_image_file" name="featured_image_file" accept="image/*">
+                        <small class="form-text text-muted">Upload an image to be used as the post's banner/featured image.</small>
+                    </div>
+
                     <div class="mb-3">
                         <label for="post_content" class="form-label">Content</label>
                         <textarea class="form-control" id="post_content" name="content"></textarea>
@@ -301,7 +386,7 @@ $conn->close();
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Title</th>
+                                    <th>Image</th> <th>Title</th>
                                     <th>Slug</th>
                                     <th>Category</th>
                                     <th>Author</th>
@@ -315,6 +400,13 @@ $conn->close();
                                 <?php foreach ($blog_posts as $post): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($post['post_id']); ?></td>
+                                        <td>
+                                            <?php if ($post['featured_image_url']): ?>
+                                                <img src="<?php echo htmlspecialchars($blog_upload_dir . $post['featured_image_url']); ?>" alt="Featured Image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                            <?php else: ?>
+                                                N/A
+                                            <?php endif; ?>
+                                        </td>
                                         <td><?php echo htmlspecialchars($post['title']); ?></td>
                                         <td><?php echo htmlspecialchars($post['slug']); ?></td>
                                         <td><?php echo htmlspecialchars($post['category_name'] ?: 'Uncategorized'); ?></td>
@@ -344,6 +436,7 @@ $conn->close();
         </div>
     </div>
 
+    <?php require_once 'includes/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
