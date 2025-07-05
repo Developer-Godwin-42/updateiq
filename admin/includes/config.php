@@ -1,5 +1,6 @@
 <?php
 // Database Credentials are in database.php
+require_once 'database.php'; // Assumes $public_conn is available here
 
 // Email Credentials
 define('SMTP_HOST', 'smtp.gmail.com');
