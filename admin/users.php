@@ -105,12 +105,9 @@ $conn->close();
 
 </head>
 <body>
-    
 
     <div class="container mt-4">
-    
         <?php echo $message; // Display success/error messages ?>
-
         <div class="card mb-4">
             <div class="card-header">
                 <h3>Add New User</h3>

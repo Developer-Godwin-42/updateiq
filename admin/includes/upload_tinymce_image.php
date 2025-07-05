@@ -53,8 +53,8 @@ if (!in_array($file_ext, $allowed_extensions)) {
     $uploadOk = 0;
 }
 
-    // Validate file size (e.g., max 5MB, previously fixed)
-    $max_file_size = 5 * 1024 * 1024; // 5MB
+    // Validate file size (e.g., max 1MB, previously fixed)
+    $max_file_size = 1 * 1024 * 1024; // 1MB
     if ($file_size > $max_file_size) {
         $response_message = 'File is too large. Max ' . ($max_file_size / (1024 * 1024)) . 'MB.';
         $uploadOk = 0;

@@ -122,13 +122,19 @@
     background: white;
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    overflow: hidden;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    position: relative;
 }
 
 .table {
     width: 100%;
+    min-width: 600px; /* Ensures table doesn't collapse too much */
     margin-bottom: 0;
     color: var(--dark-gray);
+    border-collapse: collapse;
 }
 
 .table th {
@@ -143,13 +149,16 @@
 }
 
 .table td {
-    padding: 1rem 1.5rem;
+    padding: 1rem 1rem;
     vertical-align: middle;
     border-bottom: 1px solid var(--light-gray);
 }
 
 .table tr:last-child td {
     border-bottom: none;
+}
+.table tr td:first-child {
+    border-right: 1px solid #0000002e;
 }
 
 /* Forms */

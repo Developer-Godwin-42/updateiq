@@ -20,6 +20,14 @@ INSERT IGNORE INTO `roles` (`role_name`, `description`) VALUES
 ('Admin', 'Full administrative access to the CMS'),
 ('Editor', 'Can create, edit, and publish content (blogs, menus, gallery)');
 
+
+ALTER TABLE `users`
+ADD `password_reset_token` VARCHAR(64) NULL DEFAULT NULL,
+ADD `token_expiration` DATETIME NULL DEFAULT NULL;
+
+-- Optional: Add an index for faster token lookups
+CREATE INDEX idx_password_reset_token ON users(password_reset_token);
+
 -- --------------------------------------------------------
 -- Table structure for `users`
 -- Stores information about CMS users (admins, editors)
@@ -52,18 +60,18 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Table structure for `menus`
 -- Stores website navigation menu items
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `menus` (
-  `menu_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `menu_text` VARCHAR(100) NOT NULL,
-  `menu_link` VARCHAR(255) NOT NULL,
-  `parent_id` INT(11) DEFAULT NULL, -- For sub-menus
-  `order_priority` INT(11) DEFAULT 0, -- To control menu order
-  `is_active` BOOLEAN DEFAULT TRUE,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`menu_id`),
-  FOREIGN KEY (`parent_id`) REFERENCES `menus`(`menu_id`) ON UPDATE CASCADE ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- CREATE TABLE IF NOT EXISTS `menus` (
+--   `menu_id` INT(11) NOT NULL AUTO_INCREMENT,
+--   `menu_text` VARCHAR(100) NOT NULL,
+--   `menu_link` VARCHAR(255) NOT NULL,
+--   `parent_id` INT(11) DEFAULT NULL, -- For sub-menus
+--   `order_priority` INT(11) DEFAULT 0, -- To control menu order
+--   `is_active` BOOLEAN DEFAULT TRUE,
+--   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--   PRIMARY KEY (`menu_id`),
+--   FOREIGN KEY (`parent_id`) REFERENCES `menus`(`menu_id`) ON UPDATE CASCADE ON DELETE SET NULL
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 -- Table structure for `gallery_categories`
@@ -144,3 +152,41 @@ CREATE TABLE IF NOT EXISTS `blog_posts` (
 -- Example: INSERT INTO `users` (`username`, `password_hash`, `email`, `role_id`, `is_active`) VALUES
 -- ('admin', '$2y$10$YOUR_GENERATED_HASH_HERE', 'admin@example.com', (SELECT role_id FROM `roles` WHERE role_name = 'Admin'), TRUE);
 -- Replace '$2y$10$YOUR_GENERATED_HASH_HERE' with an actual hash.
+
+
+
+
+-- --------------------------------------------------------
+-- Table structure for `food_menu_categories`
+-- Stores categories like Appetizers, Main Course, etc.
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `food_menu_categories` (
+  `category_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `category_name` VARCHAR(100) NOT NULL UNIQUE,
+  `description` TEXT,
+  `order_priority` INT(11) DEFAULT 0, -- To control display order of categories
+  `is_active` BOOLEAN DEFAULT TRUE,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- Table structure for `food_menu_items`
+-- Stores individual food menu items
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `food_menu_items` (
+  `item_id` INT(11) NOT NULL AUTO_INCREMENT,
+  `category_id` INT(11) NOT NULL, -- Foreign key to food_menu_categories
+  `item_name` VARCHAR(255) NOT NULL,
+  `description` TEXT,
+  `price` DECIMAL(10, 2) NOT NULL, -- Store price with 2 decimal places
+  `image_filename` VARCHAR(255), -- Stores the filename of the item's image
+  `image_alt_text` VARCHAR(255), -- Alt text for the image
+  `order_priority` INT(11) DEFAULT 0, -- To control display order of items within a category
+  `is_active` BOOLEAN DEFAULT TRUE,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`item_id`),
+  FOREIGN KEY (`category_id`) REFERENCES `food_menu_categories`(`category_id`) ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

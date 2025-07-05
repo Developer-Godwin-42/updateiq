@@ -302,12 +302,10 @@ $conn->close();
         <div class="row">
             <div class="col-lg-8">
                 <?php if ($post): ?>
-                    <h1 class="mb-3 d-none"><?php echo htmlspecialchars($post['title']); ?></h1> <p class="text-muted small">
-                        Published on <?php echo date('F j, Y', strtotime($post['published_at'])); ?>
-                        by <?php echo htmlspecialchars($post['username'] ?: 'Unknown Author'); ?>
-                        <?php if ($post['category_name']): ?>
-                            in <span class="badge bg-primary"><?php echo htmlspecialchars($post['category_name']); ?></span>
-                        <?php endif; ?>
+                    <h1 class="mb-3 d-none"><?php echo htmlspecialchars($post['title']); ?></h1> 
+                    <p class="">Published on <?php echo date('F j, Y', strtotime($post['published_at'])); ?> by <?php echo htmlspecialchars($post['username'] ?: 'Unknown Author'); ?>
+                    
+                    <?php if ($post['category_name']): ?>in <span class="badge bg-primary"><?php echo htmlspecialchars($post['category_name']); ?></span><?php endif; ?>
                     </p>
                     <hr>
                     <div class="blog-content">

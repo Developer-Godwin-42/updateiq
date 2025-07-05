@@ -27,6 +27,14 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#about">About</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#services" role="button" data-bs-toggle="dropdown" aria-expanded="false">Our Services</a>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-item"><a href="gallery.php">Gallery Management</a></li>
+                            <li class="dropdown-item"><a href="blog.php">Blog Management</a></li>
+                            <li class="dropdown-item"><a href="food_menu.php">Food Menu Management</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#how-it-works">How It Works</a>
                     </li>

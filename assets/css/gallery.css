@@ -1,0 +1,103 @@
+
+/* Gallery Banner Styles */
+.gallery-banner {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://placehold.co/1500x400/28a745/ffffff?') no-repeat center center;
+    background-size: cover;
+    background-position: center;
+    padding: 80px 0;
+    color: white;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 50px;
+}
+.gallery-banner::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: -1;
+}
+.gallery-banner h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+.gallery-banner .breadcrumb {
+    --bs-breadcrumb-divider-color: rgba(255, 255, 255, 0.75);
+}
+.gallery-banner .breadcrumb-item a {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+}
+.gallery-banner .breadcrumb-item.active {
+    color: white;
+    font-weight: bold;
+}
+
+/* Gallery Image Card Styles */
+.gallery-image-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    overflow: hidden; /* Ensures image corners are rounded */
+    height: 100%; /* Make cards equal height */
+    display: flex;
+    flex-direction: column;
+}
+.gallery-image-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+.gallery-image-card img {
+    width: 100%;
+    height: 200px; /* Fixed height for uniform images */
+    object-fit: cover; /* Crucial for cropping images to fit */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+.gallery-image-card .card-body {
+    padding: 15px;
+    flex-grow: 1; /* Allows body to expand */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pushes button to bottom */
+}
+.gallery-image-card .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+.gallery-image-card .card-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+    flex-grow: 1; /* Allows text to take space */
+}
+.gallery-category-section {
+    margin-bottom: 60px; /* Space between categories */
+}
+.gallery-category-section h2 {
+    font-size: 2.2rem;
+    margin-bottom: 30px;
+    text-align: center;
+    position: relative;
+}
+.gallery-category-section h2::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background-color: #007bff;
+    border-radius: 2px;
+}
+.gallery-category-section p.lead {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #555;
+}
