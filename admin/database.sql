@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS `roles` (
 -- Insert default roles
 INSERT IGNORE INTO `roles` (`role_name`, `description`) VALUES
 ('Admin', 'Full administrative access to the CMS'),
-('Editor', 'Can create, edit, and publish content (blogs, menus, gallery)');
+('Editor', 'Can create, edit, and publish content (blogs, food_menu_items, gallery)');
 
 
 ALTER TABLE `users`
@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`user_id`),
   FOREIGN KEY (`role_id`) REFERENCES `roles`(`role_id`) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `users` CHANGE `user_id` `id` INT(11) NOT NULL AUTO_INCREMENT;
 
 -- IMPORTANT: Insert an initial admin user.
 -- Replace 'admin_username', 'admin@example.com', and 'your_strong_password'
