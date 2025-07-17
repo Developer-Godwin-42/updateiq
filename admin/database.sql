@@ -47,6 +47,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 
 ALTER TABLE `users` CHANGE `user_id` `id` INT(11) NOT NULL AUTO_INCREMENT;
 
+-- INSERT INTO `users` (`username`, `password_hash`, `email`, `role_id`, `is_active`) VALUES
+-- ('admin', 'password123', 'admin@yourdomain.com', (SELECT role_id FROM `roles` WHERE role_name = 'Admin'), TRUE);
+
 -- IMPORTANT: Insert an initial admin user.
 -- Replace 'admin_username', 'admin@example.com', and 'your_strong_password'
 -- You MUST hash the password using PHP's password_hash() function before inserting into a production environment.

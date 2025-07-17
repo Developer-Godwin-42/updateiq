@@ -1,3 +1,7 @@
+<?php
+// Start the session at the very top of the script
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,15 +9,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UpdateIQ | Admin Login</title>
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Your existing CSS remains the same */
         :root {
             --primary-color: #4e73df;
             --primary-hover: #2e59d9;
@@ -152,7 +153,8 @@
             padding: 1rem 1.25rem;
             font-size: 0.9rem;
         }
-
+        
+        /* Added styles for dismissible alert */
         .alert-danger {
             background-color: #f8d7da;
             color: #721c24;
@@ -190,6 +192,18 @@
             <p>Please login to access the admin panel</p>
         </div>
 
+        <?php
+        // This is the new, single location for displaying the login error
+        if (isset($_SESSION['login_error'])) {
+            echo '<div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">';
+            // Use htmlspecialchars to prevent XSS attacks
+            echo htmlspecialchars($_SESSION['login_error']);
+            echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+            echo '</div>';
+            // Clear the error message after displaying it so it doesn't show again
+            unset($_SESSION['login_error']);
+        }
+        ?>
 
         <form id="loginForm" action="login_process.php" method="POST" novalidate>
             <div class="mb-4">
@@ -205,7 +219,6 @@
             <div class="mb-4">
                 <div class="d-flex justify-content-between">
                     <label for="password" class="form-label">Password</label>
-                    <!-- <a href="forgot-password.php" class="text-decoration-none small text-primary">Forgot Password?</a> -->
                 </div>
                 <div class="input-group">
                     <span class="input-group-text bg-light"><i class="fas fa-lock text-muted"></i></span>
@@ -218,37 +231,25 @@
                 <div class="invalid-feedback">Please enter your password</div>
             </div>
 
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary btn-login" id="loginButton">
+            <div class="d-grid gap-2 mb-3"> <button type="submit" class="btn btn-primary btn-login" id="loginButton">
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     <span class="btn-text">Sign In</span>
                 </button>
             </div>
             <div class="form-group text-center">
-                <a href="forgot-password.php">Forgot your password?</a>
+                <a href="forgot-password.php" class="text-decoration-none small">Forgot your password?</a>
             </div>
         </form>
 
         <div class="text-center mt-4">
-            <p class="small text-muted mb-0"> 2025 UpdateIQ. All rights reserved.</p>
+            <p class="small text-muted mb-0">&copy; 2025 UpdateIQ. All rights reserved.</p>
         </div>
     </div>
 
-    <?php
-    // Ensure session is started at the very top of login.php if it's not included by header.php or similar
-    if (isset($_SESSION['login_error'])) {
-        echo '<div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">';
-        echo $_SESSION['login_error'];
-        echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-        echo '</div>';
-        unset($_SESSION['login_error']); // Clear the error message after displaying it
-    }
-    ?>
-    <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // Form validation
+        // Your existing Javascript remains the same
         (function() {
             'use strict';
             window.addEventListener('load', function() {
@@ -258,7 +259,6 @@
                         event.preventDefault();
                         event.stopPropagation();
                     } else {
-                        // Show loading spinner and change button text
                         const loginBtn = document.getElementById('loginButton');
                         const spinner = loginBtn.querySelector('.spinner-border');
                         const btnText = loginBtn.querySelector('.btn-text');
@@ -272,7 +272,6 @@
             }, false);
         })();
 
-        // Toggle password visibility
         document.querySelectorAll('.toggle-password').forEach(button => {
             button.addEventListener('click', function() {
                 const passwordInput = this.parentElement.querySelector('input');
@@ -290,7 +289,6 @@
             });
         });
 
-        // Add animation to inputs on focus
         document.querySelectorAll('.form-control').forEach(input => {
             input.addEventListener('focus', function() {
                 this.parentElement.classList.add('input-focused');
@@ -302,5 +300,4 @@
         });
     </script>
 </body>
-
 </html>

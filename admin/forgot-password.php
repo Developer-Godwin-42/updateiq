@@ -1,134 +1,78 @@
 <?php
+// FINAL WORKING PHP CODE
 
-// Step 1: Include PHPMailer classes
-require 'PHPMailer/src/Exception.php';
-require 'PHPMailer/src/PHPMailer.php';
-require 'PHPMailer/src/SMTP.php';
-require_once 'includes/config.php';
-
-// Step 2: Now include your configuration files that USE the classes
-// Make sure these files are defined after PHPMailer classes are available
-require_once 'includes/database.php'; // Assumes $public_conn is available here
-// require_once 'includes/config.php'; // Assumes SMTP_HOST, SMTP_USERNAME, etc. are defined here
-
-// Step 3: Now you can use the 'use' statements for the rest of the script
+// Use statements should be at the top
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
 
+// Include necessary files
+require 'PHPMailer/src/Exception.php';
+require 'PHPMailer/src/PHPMailer.php';
+require 'PHPMailer/src/SMTP.php';
+require_once 'includes/config.php';
+require_once 'includes/database.php';
 
-$message = ''; // Message to display to the user
+$message = '';
+$message_type = 'info'; // To control alert color
 
 // Process form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Sanitize and validate email input
-    $email = trim($_POST['email']); // Remove leading/trailing whitespace
+    $email = trim($_POST['email']);
 
-    // Basic server-side email format validation
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $message = "Please enter a valid email address.";
+        $message_type = 'danger';
     } else {
-        // Use mysqli_real_escape_string ONLY if you are not using prepared statements.
-        // With prepared statements, it's not strictly necessary for parameters,
-        // as parameters are handled by the driver. However, `trim` is still good.
-        $email = mysqli_real_escape_string($public_conn, $email);
+        $stmt = $public_conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        // Check if the email exists in the database
-        $query = "SELECT id FROM users WHERE email = ? LIMIT 1";
-        $stmt = mysqli_prepare($public_conn, $query);
+        // For security, we show a generic message whether the email is found or not.
+        $message = "If an account exists for this email, a reset link has been sent.";
+        $message_type = 'success';
 
-        if ($stmt === false) {
-            // Log database preparation error
-            error_log("MySQLi Prepare Error (SELECT): " . mysqli_error($public_conn));
-            // Show a generic error to the user
-            $message = "An unexpected error occurred. Please try again later.";
-        } else {
-            mysqli_stmt_bind_param($stmt, "s", $email);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
+        if ($result->num_rows > 0) {
+            // Email was found, so we proceed to generate a token and send the email.
+            $user = $result->fetch_assoc();
+            $user_id = $user['id'];
+            $token = bin2hex(random_bytes(32));
+            $expiration = date('Y-m-d H:i:s', time() + 3600); // Token valid for 1 hour
 
-            if (mysqli_num_rows($result) > 0) {
-                // Email found, proceed with token generation and email sending
-                $token = bin2hex(random_bytes(32)); // Generate a strong, random token
-                $expiration = date('Y-m-d H:i:s', time() + 3600); // Token valid for 1 hour
+            $update_stmt = $public_conn->prepare("UPDATE users SET password_reset_token = ?, token_expiration = ? WHERE id = ?");
+            $update_stmt->bind_param("ssi", $token, $expiration, $user_id);
 
-                $user = mysqli_fetch_assoc($result);
-                $user_id = $user['id'];
+            if ($update_stmt->execute()) {
+                $mail = new PHPMailer(true);
+                try {
+                    // Server settings
+                    $mail->isSMTP();
+                    $mail->Host       = SMTP_HOST;
+                    $mail->SMTPAuth   = true;
+                    $mail->Username   = SMTP_USERNAME;
+                    $mail->Password   = SMTP_PASSWORD;
+                    $mail->SMTPSecure = SMTP_SECURE;
+                    $mail->Port       = SMTP_PORT;
 
-                // Update user record with token
-                $update_query = "UPDATE users SET password_reset_token = ?, token_expiration = ? WHERE id = ?";
-                $update_stmt = mysqli_prepare($public_conn, $update_query);
+                    // Recipients
+                    $mail->setFrom(SMTP_USERNAME, 'UpdateIQ');
+                    $mail->addAddress($email);
 
-                if ($update_stmt === false) {
-                    // Log database update preparation error
-                    error_log("MySQLi Prepare Error (UPDATE): " . mysqli_error($public_conn));
-                    // Show a generic error to the user
-                    $message = "An unexpected error occurred. Please try again later.";
-                } else {
-                    mysqli_stmt_bind_param($update_stmt, "ssi", $token, $expiration, $user_id);
-                    $update_success = mysqli_stmt_execute($update_stmt);
+                    // Email Content
+                    $reset_link = "http://localhost:8000/admin/reset-password.php?token=" . urlencode($token);
+                    $mail->isHTML(true);
+                    $mail->Subject = 'Password Reset Request for UpdateIQ';
+                    $mail->Body    = "Hello,<br><br>Click the link below to reset your password. This link is valid for 1 hour.<br><br><a href='{$reset_link}'>Reset Password</a><br><br>If you did not request this, please ignore this email.";
 
-                    if ($update_success) {  
-                        // Send the password reset email
-                        $mail = new PHPMailer(true);
-                        try {
-                            // Server settings
-                            $mail->isSMTP();
-
-                            //   // UNCOMMENT THESE TWO LINES
-                            //   $mail->SMTPDebug = \PHPMailer\PHPMailer\SMTP::DEBUG_SERVER; // Set to 2
-                            //   $mail->Debugoutput = 'html'; // Display in browser
-                            $mail->SMTPDebug = 2; // Enable verbose debug output (level 2)
-                            $mail->Debugoutput = 'html';
-                            $mail->Host       = 'smtp.gmail.com';
-                            $mail->SMTPAuth   = true;
-                            $mail->Username   = 'noreplysbbs@gmail.com';
-                            $mail->Password   = 'ywlo bmup lryl jobz'; // Your App Password
-                            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                            $mail->Port       = 587;
-
-                            // Recipients
-                            $mail->setFrom('noreplysbbs@gmail.com', 'UpdateIQ');
-                            $mail->addAddress($email); // <-- THE FIX: Send to the user's email
-
-                            // Content
-                            $reset_link = "http://localhost:8000/admin/reset-password.php?token=" . urlencode($token);
-                            $mail->isHTML(true);
-                            $mail->Subject = 'Password Reset Request for UpdateIQ';
-                            $mail->Body    = "
-        Hello,<br><br>
-        You recently requested to reset your password for your UpdateIQ account.
-        <br><br>
-        Please click the link below to reset your password. This link is valid for 1 hour.<br><br>
-        <a href='{$reset_link}'>Reset Password</a><br><br>
-        If you did not request this, please ignore this email.
-        <br><br>
-        Thanks,<br>
-        The UpdateIQ Team
-    ";
-                            $mail->AltBody = "Hello,\n\nYou recently requested to reset your password for your UpdateIQ account.\n\nPlease copy and paste the following link into your browser to reset your password. This link is valid for 1 hour:\n\n{$reset_link}\n\nIf you did not request this, please ignore this email.\n\nThanks,\nThe UpdateIQ Team";
-
-                            $mail->send();
-                        } catch (Exception $e) {
-                            // Log the error for debugging, but show a generic message to the user
-                            error_log("PHPMailer Error (Forgot Password): {$mail->ErrorInfo}");
-                            // The generic message set at the end of the script will handle user feedback
-                        }
-                    } else {
-                        // Log database execution error for the update
-                        error_log("MySQLi Execute Error (UPDATE): " . mysqli_error($public_conn));
-                        $message = "An unexpected error occurred. Please try again later.";
-                    }
-                    mysqli_stmt_close($update_stmt);
+                    $mail->send();
+                } catch (Exception $e) {
+                    // Silently log the error for the admin, but don't show the user.
+                    error_log("PHPMailer Error: {$mail->ErrorInfo}");
                 }
             }
-            mysqli_stmt_close($stmt);
         }
     }
-    // IMPORTANT: Always show a generic message to prevent email enumeration attacks.
-    // This message is shown regardless of whether the email was found or the email sending failed.
-    // This prevents an attacker from knowing if an email exists in your system.
-    $message = "If an account with that email address exists, we have sent instructions to reset your password.";
 }
 ?>
 <!DOCTYPE html>
@@ -285,6 +229,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             margin: 0 auto 1.5rem;
             display: block;
         }
+
+        .alert-info {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+
+        /* ADD THESE NEW STYLES */
+        .alert-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
     </style>
 </head>
 
@@ -298,9 +261,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <div class="auth-content">
             <?php if (!empty($message)): ?>
-                <div class="alert alert-info"><?php echo htmlspecialchars($message); ?></div>
+                <div class="alert alert-<?php echo $message_type; ?>"><?php echo $message; ?></div>
             <?php endif; ?>
-
             <form method="post" action="forgot-password.php">
                 <div class="form-group">
                     <label for="email">Email Address</label>

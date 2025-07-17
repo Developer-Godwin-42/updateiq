@@ -8,7 +8,7 @@ require 'PHPMailer/src/SMTP.php';
 // Step 2: Now include your configuration files that USE the classes
 // Make sure these files are defined after PHPMailer classes are available
 require_once 'includes/database.php'; // Assumes $public_conn is available here
-// require_once 'includes/config.php'; // Assumes SMTP_HOST, SMTP_USERNAME, etc. are defined here
+require_once 'includes/config.php'; // Assumes SMTP_HOST, SMTP_USERNAME, etc. are defined here
 
 // Step 3: Now you can use the 'use' statements for the rest of the script
 use PHPMailer\PHPMailer\PHPMailer;

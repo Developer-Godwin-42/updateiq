@@ -1,0 +1,39 @@
+=== Login Process Started ===
+[2025-07-17 13:35:37] Starting session...
+[2025-07-17 13:35:37] Session ID: giefl81bebeh5fkhn7thi6otum
+[2025-07-17 13:35:37] Session status: 2
+[2025-07-17 13:35:37] Request method: POST
+[2025-07-17 13:35:37] POST data: Array
+(
+    [username] => admin
+    [password] => ipassword123
+)
+
+[17-Jul-2025 13:35:37 Europe/Berlin] Login attempt for username: admin
+[2025-07-17 13:35:37] User query executed. Found rows: 1
+[2025-07-17 13:35:37] Password verification attempt for user: admin
+=== Login Process Started ===
+[2025-07-17 13:35:47] Starting session...
+[2025-07-17 13:35:47] Session ID: giefl81bebeh5fkhn7thi6otum
+[2025-07-17 13:35:47] Session status: 2
+[2025-07-17 13:35:47] Request method: POST
+[2025-07-17 13:35:47] POST data: Array
+(
+    [username] => Admin
+    [password] => password123
+)
+
+[17-Jul-2025 13:35:47 Europe/Berlin] Login attempt for username: Admin
+[2025-07-17 13:35:47] User query executed. Found rows: 1
+[2025-07-17 13:35:47] Password verification attempt for user: admin
+[2025-07-17 13:35:47] Password verified successfully
+[2025-07-17 13:35:47] Session variables set - User ID: 1, Username: admin
+[2025-07-17 13:35:47] Session data: Array
+(
+    [user_id] => 1
+    [username] => admin
+    [user_role] => Admin
+    [last_activity] => 1752752147
+)
+
+[2025-07-17 13:35:47] Redirecting to dashboard.php
