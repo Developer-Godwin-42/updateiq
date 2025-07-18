@@ -45,7 +45,42 @@ CREATE TABLE IF NOT EXISTS `users` (
   FOREIGN KEY (`role_id`) REFERENCES `roles`(`role_id`) ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
 ALTER TABLE `users` CHANGE `user_id` `id` INT(11) NOT NULL AUTO_INCREMENT;
+-- today created the code 18/7/2025
+ALTER TABLE `users`
+ADD `password_reset_token` VARCHAR(64) NULL DEFAULT NULL,
+ADD `token_expiration` DATETIME NULL DEFAULT NULL;
+
+-- Optional: Add an index for faster token lookups
+CREATE INDEX idx_password_reset_token ON users(password_reset_token);
+
+-- 1. Remove old password reset columns from the users table
+-- This is CRUCIAL to prevent token overwriting issues.
+ALTER TABLE `users`
+DROP COLUMN IF EXISTS `password_reset_token`,
+DROP COLUMN IF EXISTS `token_expiration`;
+
+
+-- Drop the index if it exists, as it might prevent column drops
+DROP INDEX IF EXISTS idx_password_reset_token ON users;
+
+SELECT id, user_id, token, expires_at FROM password_resets ORDER BY created_at DESC LIMIT 1;
+
+-- 2. Create the dedicated password_resets table
+-- This table will store unique tokens for each reset request.
+CREATE TABLE IF NOT EXISTS `password_resets` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `token` VARCHAR(255) NOT NULL UNIQUE, -- Token should be unique
+    `expires_at` DATETIME NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX (`token`), -- Index for faster lookup
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE -- Link to the users table
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- today created the code 18/7/2025
 
 -- INSERT INTO `users` (`username`, `password_hash`, `email`, `role_id`, `is_active`) VALUES
 -- ('admin', 'password123', 'admin@yourdomain.com', (SELECT role_id FROM `roles` WHERE role_name = 'Admin'), TRUE);

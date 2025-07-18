@@ -37,3 +37,158 @@
 )
 
 [2025-07-17 13:35:47] Redirecting to dashboard.php
+=== Login Process Started ===
+[2025-07-17 15:05:44] Starting session...
+[2025-07-17 15:05:44] Session ID: 8o896rblmpke5vds93tcj4htu5
+[2025-07-17 15:05:44] Session status: 2
+[2025-07-17 15:05:44] Request method: POST
+[2025-07-17 15:05:44] POST data: Array
+(
+    [username] => admin
+    [password] => pasword123
+)
+
+[17-Jul-2025 15:05:44 Europe/Berlin] Login attempt for username: admin
+[2025-07-17 15:05:44] User query executed. Found rows: 1
+[2025-07-17 15:05:44] Password verification attempt for user: admin
+=== Login Process Started ===
+[2025-07-17 15:33:44] Starting session...
+[2025-07-17 15:33:44] Session ID: 8o896rblmpke5vds93tcj4htu5
+[2025-07-17 15:33:44] Session status: 2
+[2025-07-17 15:33:44] Request method: POST
+[2025-07-17 15:33:44] POST data: Array
+(
+    [username] => admin
+    [password] => passwod123
+)
+
+[17-Jul-2025 15:33:44 Europe/Berlin] Login attempt for username: admin
+[2025-07-17 15:33:44] User query executed. Found rows: 1
+[2025-07-17 15:33:44] Password verification attempt for user: admin
+=== Login Process Started ===
+[2025-07-17 15:34:19] Starting session...
+[2025-07-17 15:34:19] Session ID: 8o896rblmpke5vds93tcj4htu5
+[2025-07-17 15:34:19] Session status: 2
+[2025-07-17 15:34:19] Request method: POST
+[2025-07-17 15:34:19] POST data: Array
+(
+    [username] => Admin
+    [password] => password123
+)
+
+[17-Jul-2025 15:34:19 Europe/Berlin] Login attempt for username: Admin
+[2025-07-17 15:34:19] User query executed. Found rows: 1
+[2025-07-17 15:34:19] Password verification attempt for user: admin
+[2025-07-17 15:34:19] Password verified successfully
+[2025-07-17 15:34:19] Session variables set - User ID: 1, Username: admin
+[2025-07-17 15:34:19] Session data: Array
+(
+    [user_id] => 1
+    [username] => admin
+    [user_role] => Admin
+    [last_activity] => 1752759259
+)
+
+[2025-07-17 15:34:19] Redirecting to dashboard.php
+=== Login Process Started ===
+[2025-07-17 15:34:53] Starting session...
+[2025-07-17 15:34:53] Session ID: 20qos01dcvcbvkam3cckfjpblk
+[2025-07-17 15:34:53] Session status: 2
+[2025-07-17 15:34:53] Request method: POST
+[2025-07-17 15:34:53] POST data: Array
+(
+    [username] => admin
+    [password] => password123
+)
+
+[17-Jul-2025 15:34:53 Europe/Berlin] Login attempt for username: admin
+[2025-07-17 15:34:53] User query executed. Found rows: 1
+[2025-07-17 15:34:53] Password verification attempt for user: admin
+[2025-07-17 15:34:54] Password verified successfully
+[2025-07-17 15:34:54] Session variables set - User ID: 1, Username: admin
+[2025-07-17 15:34:54] Session data: Array
+(
+    [user_id] => 1
+    [username] => admin
+    [user_role] => Admin
+    [last_activity] => 1752759294
+)
+
+[2025-07-17 15:34:54] Redirecting to dashboard.php
+=== Login Process Started ===
+[2025-07-17 15:58:24] Starting session...
+[2025-07-17 15:58:24] Session ID: 2p0m7r90dqh432t0mhjt8s4bjr
+[2025-07-17 15:58:24] Session status: 2
+[2025-07-17 15:58:24] Request method: POST
+[2025-07-17 15:58:24] POST data: Array
+(
+    [username] => admin
+    [password] => password123
+)
+
+[17-Jul-2025 15:58:24 Europe/Berlin] Login attempt for username: admin
+[2025-07-17 15:58:24] User query executed. Found rows: 1
+[2025-07-17 15:58:24] Password verification attempt for user: admin
+[2025-07-17 15:58:24] Password verified successfully
+[2025-07-17 15:58:24] Session variables set - User ID: 1, Username: admin
+[2025-07-17 15:58:24] Session data: Array
+(
+    [user_id] => 1
+    [username] => admin
+    [user_role] => Admin
+    [last_activity] => 1752760704
+)
+
+[2025-07-17 15:58:24] Redirecting to dashboard.php
+=== Login Process Started ===
+[2025-07-18 08:35:10] Starting session...
+[2025-07-18 08:35:10] Session ID: dhr061s30hn6u5bsas71h7rbm4
+[2025-07-18 08:35:10] Session status: 2
+[2025-07-18 08:35:10] Request method: POST
+[2025-07-18 08:35:10] POST data: Array
+(
+    [username] => Godwin
+    [password] => 1234567890
+)
+
+[18-Jul-2025 08:35:10 Europe/Berlin] Login attempt for username: Godwin
+[2025-07-18 08:35:10] User query executed. Found rows: 1
+[2025-07-18 08:35:10] Password verification attempt for user: Godwin
+[2025-07-18 08:35:10] Password verified successfully
+[2025-07-18 08:35:10] Session variables set - User ID: 3, Username: Godwin
+[2025-07-18 08:35:10] Session data: Array
+(
+    [user_id] => 3
+    [username] => Godwin
+    [user_role] => Admin
+    [last_activity] => 1752820510
+    [csrf_token] => a7cb0971569c355f211e9785c2b214b524e32021cba6f12e0cd58bcaff224e69
+)
+
+[2025-07-18 08:35:10] Redirecting to dashboard.php
+=== Login Process Started ===
+[2025-07-18 09:13:01] Starting session...
+[2025-07-18 09:13:01] Session ID: d0amo9lepuo39qhkhmjffqt6fm
+[2025-07-18 09:13:01] Session status: 2
+[2025-07-18 09:13:01] Request method: POST
+[2025-07-18 09:13:01] POST data: Array
+(
+    [username] => admin
+    [password] => password123
+)
+
+[18-Jul-2025 09:13:01 Europe/Berlin] Login attempt for username: admin
+[2025-07-18 09:13:01] User query executed. Found rows: 1
+[2025-07-18 09:13:01] Password verification attempt for user: admin
+[2025-07-18 09:13:01] Password verified successfully
+[2025-07-18 09:13:01] Session variables set - User ID: 1, Username: admin
+[2025-07-18 09:13:01] Session data: Array
+(
+    [user_id] => 1
+    [username] => admin
+    [user_role] => Admin
+    [last_activity] => 1752822781
+    [csrf_token] => a7cb0971569c355f211e9785c2b214b524e32021cba6f12e0cd58bcaff224e69
+)
+
+[2025-07-18 09:13:01] Redirecting to dashboard.php

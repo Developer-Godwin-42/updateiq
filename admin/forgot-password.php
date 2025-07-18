@@ -1,5 +1,5 @@
 <?php
-// FINAL WORKING PHP CODE
+// FINAL WORKING PHP CODE - forgot-password.php
 
 // Use statements should be at the top
 use PHPMailer\PHPMailer\PHPMailer;
@@ -10,8 +10,9 @@ use PHPMailer\PHPMailer\SMTP;
 require 'PHPMailer/src/Exception.php';
 require 'PHPMailer/src/PHPMailer.php';
 require 'PHPMailer/src/SMTP.php';
-require_once 'includes/config.php';
-require_once 'includes/database.php';
+
+require_once 'includes/config.php'; // Make sure this contains your SMTP_HOST, SMTP_USERNAME, etc.
+require_once 'includes/database.php'; // Make sure this provides $conn (your database connection)
 
 $message = '';
 $message_type = 'info'; // To control alert color
@@ -24,26 +25,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message = "Please enter a valid email address.";
         $message_type = 'danger';
     } else {
-        $stmt = $public_conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
 
         // For security, we show a generic message whether the email is found or not.
-        $message = "If an account exists for this email, a reset link has been sent.";
-        $message_type = 'success';
+        // This prevents email enumeration (attackers finding valid emails).
+        $message = "If an account exists for this email, a reset link has been sent to your inbox.";
+        $message_type = 'success'; // Always show success to prevent email enumeration
 
         if ($result->num_rows > 0) {
             // Email was found, so we proceed to generate a token and send the email.
             $user = $result->fetch_assoc();
             $user_id = $user['id'];
-            $token = bin2hex(random_bytes(32));
-            $expiration = date('Y-m-d H:i:s', time() + 3600); // Token valid for 1 hour
 
-            $update_stmt = $public_conn->prepare("UPDATE users SET password_reset_token = ?, token_expiration = ? WHERE id = ?");
-            $update_stmt->bind_param("ssi", $token, $expiration, $user_id);
+            // Generate a secure, unique token
+            $token = bin2hex(random_bytes(32)); // Generates a 64-character hex string
+            $expiration = date('Y-m-d H:i:s', time() + 3600); // Token valid for 1 hour from now
 
-            if ($update_stmt->execute()) {
+            // Insert the token into the password_resets table
+            // This design allows multiple reset links to be generated, but only the specific one clicked will work.
+            $insert_stmt = $conn->prepare("INSERT INTO password_resets (user_id, token, expires_at) VALUES (?, ?, ?)");
+            // 'iss' for integer, string, string (user_id, token, expiration)
+            $insert_stmt->bind_param("iss", $user_id, $token, $expiration);
+
+            if ($insert_stmt->execute()) {
                 $mail = new PHPMailer(true);
                 try {
                     // Server settings
@@ -52,26 +59,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $mail->SMTPAuth   = true;
                     $mail->Username   = SMTP_USERNAME;
                     $mail->Password   = SMTP_PASSWORD;
-                    $mail->SMTPSecure = SMTP_SECURE;
-                    $mail->Port       = SMTP_PORT;
+                    $mail->SMTPSecure = SMTP_SECURE; // e.g., 'ssl' or 'tls'
+                    $mail->Port       = SMTP_PORT;     // e.g., 465 for SSL, 587 for TLS
 
                     // Recipients
-                    $mail->setFrom(SMTP_USERNAME, 'UpdateIQ');
+                    $mail->setFrom(SMTP_USERNAME, 'UpdateIQ'); // Your sender email and name
                     $mail->addAddress($email);
 
                     // Email Content
+                    // Ensure this URL matches your actual domain and path
                     $reset_link = "http://localhost:8000/admin/reset-password.php?token=" . urlencode($token);
                     $mail->isHTML(true);
                     $mail->Subject = 'Password Reset Request for UpdateIQ';
                     $mail->Body    = "Hello,<br><br>Click the link below to reset your password. This link is valid for 1 hour.<br><br><a href='{$reset_link}'>Reset Password</a><br><br>If you did not request this, please ignore this email.";
+                    $mail->AltBody = "Hello,\n\nClick the link below to reset your password. This link is valid for 1 hour.\n\n{$reset_link}\n\nIf you did not request this, please ignore this email.";
 
                     $mail->send();
+                    // error_log("Password reset email sent to: " . $email); // For debugging: enable to see if email sending is attempted
                 } catch (Exception $e) {
                     // Silently log the error for the admin, but don't show the user.
-                    error_log("PHPMailer Error: {$mail->ErrorInfo}");
+                    error_log("PHPMailer Error sending reset link to {$email}: {$mail->ErrorInfo}");
                 }
+            } else {
+                 error_log("Database error inserting reset token for user ID {$user_id}: " . $insert_stmt->error);
             }
+            $insert_stmt->close();
         }
+        $stmt->close();
     }
 }
 ?>
@@ -228,12 +242,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             max-width: 200px;
             margin: 0 auto 1.5rem;
             display: block;
-        }
-
-        .alert-info {
-            background-color: #e0f2fe;
-            color: #0369a1;
-            border: 1px solid #bae6fd;
         }
 
         /* ADD THESE NEW STYLES */
